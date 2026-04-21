@@ -54,6 +54,15 @@ class PathToOutlineConverter extends PathProxy {
 
   @override
   void moveTo(double x, double y) {
+    if (_points.length > 1) {
+      // Previous sub-path had drawing commands; close it as a separate contour.
+      close();
+    } else if (_points.isNotEmpty) {
+      // Previous sub-path was a lone moveTo with no drawing commands.
+      // Discard it — it would produce a degenerate 1-point outline.
+      _points.clear();
+      _isOnCurve.clear();
+    }
     _points.add(math.Point<num>(x, y));
     _isOnCurve.add(true);
   }
