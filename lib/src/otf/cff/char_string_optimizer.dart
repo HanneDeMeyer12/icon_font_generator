@@ -45,19 +45,15 @@ class CharStringOptimizer {
       prevOpnds.addAll(currOpnds);
       return true;
     } else if (op == hhcurveto || op == vvcurveto) {
-      final prevHasDelta = prevOpnds.length % 4 != 0;
+      // Both operators take an optional leading delta that applies to the
+      // FIRST curve of the sequence only - every following curve implicitly
+      // has a delta of 0 (spec: dx1? {dya dxb dyb dyc}+ vvcurveto).
+      // So a curve can only be appended when it has no delta of its own,
+      // otherwise that delta would be silently dropped and the curve would
+      // end up in the wrong place.
       final currHasDelta = currOpnds.length % 4 != 0;
 
-      final p0prev = prevHasDelta ? prevOpnds.first : null;
-      final p0 = currHasDelta ? currOpnds.first : null;
-
-      // Is axis delta same for two curves
-      if (p0?.value == p0prev?.value) {
-        // Removing delta - it's already present in a previous command
-        if (currHasDelta) {
-          currOpnds.removeAt(0);
-        }
-
+      if (!currHasDelta) {
         prevOpnds.addAll(currOpnds);
         return true;
       }
